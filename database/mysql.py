@@ -61,15 +61,16 @@ class MySQLDatabase:
             for column in columns:
                 sql_str += "%s, " % column
 
-            sql_str = sql_str[:-2] #remove the last comma
+            #removes the last comma
+            sql_str = sql_str[:-2]
 
 
-        #add the table to select from
+            #add the table to select from
             sql_str += " FROM %s.%s" % (self.database_name, table)
 
             #there is a JOIN clause attached
             if kwargs.has_key('join'):
-                sql_str += " JOIN %s" % kwargs.get('join')
+                sql_str += " INNER JOIN %s" % kwargs.get('join')
 
             #if there is a WHERE clause attached
             if kwargs.has_key('where'):

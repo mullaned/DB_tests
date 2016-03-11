@@ -6,11 +6,12 @@ my_db = MySQLDatabase('juanexp','root','ihi8Neru')
 
 #results2 = my_db.get_columns_for_table('employees')
 
-kwrgs = {'where': "employees.first_name='Gino'",
+kwrgs = {'join': "titles on titles.emp_no = employees.emp_no",
+         'where': "employees.first_name='Gino'",
          'order by': "employees.last_name",
          'limit': "2"}
 
-results3 = my_db.select('employees', columns=['first_name', 'last_name'], named_tuples=True,**kwrgs)
+results3 = my_db.select('employees', columns=["concat(first_name, ' ', last_name) as Name", "concat(employees.emp_no) as Employee_Number"], named_tuples=True,**kwrgs)
 
 #print results1
 
