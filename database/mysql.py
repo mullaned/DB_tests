@@ -1,4 +1,5 @@
 import MySQLdb as _mysql
+import collections
 
 
 class MySQLDatabase:
@@ -34,3 +35,88 @@ class MySQLDatabase:
         columns = cursor.fetchall()
         cursor.close()
         return columns
+
+    def convert_to_named_tuples(self, cursor):
+        results = None
+
+        names = " ".join(d[0] for d in cursor.description)
+        klass = collections.namedtuple('Results', names)
+
+        try:
+            results = map(klass._make, cursor.fetchall()) #amount of results to return
+        except _mysql.ProgrammingError:
+            pass
+
+        return results
+
+
+    def select(self,table,columns=None, named_tuples=False, **kwargs):
+
+        sql_str = "SELECT "
+
+        #add columns or just the wildcard
+        if not columns:
+            sql_str += " * "
+        else:
+            for column in columns:
+                sql_str += "%s, " % column
+
+            sql_str = sql_str[:-2] #remove the last comma
+
+
+        #add the table to select from
+            sql_str += " FROM %s.%s" % (self.database_name, table)
+
+            #there is a JOIN clause attached
+            if kwargs.has_key('join'):
+                sql_str += " JOIN %s" % kwargs.get('join')
+
+            #if there is a WHERE clause attached
+            if kwargs.has_key('where'):
+                sql_str += " WHERE %s" % kwargs.get('where')
+
+            if kwargs.has_key('order by'):
+                sql_str += " ORDER BY %s" % kwargs.get('order by')
+
+            if kwargs.has_key('limit'):
+                sql_str += " LIMIT %s" % kwargs.get('limit')
+
+            sql_str += ";" #finalise our sql string
+
+            cursor = self.db.cursor()
+
+            cursor.execute(sql_str)
+
+            if named_tuples:
+                results = self.convert_to_named_tuples(cursor)
+
+            else:
+                results = cursor.fetchall() #the amount of records to return
+
+
+            cursor.close()
+
+            return results
+
+
+    def delete(self, table, **wheres):
+        sql_str = "DELETE FROM %s.%s" % (self.database_name, table)
+
+        if wheres is not None:
+            first_where_clause = True
+            for where, term in wheres.iteritems():
+                if first_where_clause:
+                    #this is the first WHERE clause
+                    sql_str += " WHERE %s.%s%s" % (table,where,term)
+                    first_where_clause = False
+                else:
+                    #this is the additional clause so use AND
+                    sql_str += " AND %s.%s%s" % (table,where,term)
+
+
+        sql_str += ";"
+
+        cursor = self.db.cursor()
+        cursor.execute(sql_str)
+        self.db.commit()
+        cursor.close()

@@ -2,13 +2,21 @@ from database.mysql import MySQLDatabase
 
 my_db = MySQLDatabase('juanexp','root','ihi8Neru')
 
-results1 = my_db.get_available_tables()
+#results1 = my_db.get_available_tables()
 
-results2 = my_db.get_columns_for_table('employees')
+#results2 = my_db.get_columns_for_table('employees')
 
-print results1
+kwrgs = {'where': "employees.first_name='Gino'",
+         'order by': "employees.last_name",
+         'limit': "2"}
 
-print results2
+results3 = my_db.select('employees', columns=['first_name', 'last_name'], named_tuples=True,**kwrgs)
+
+#print results1
+
+#print results2
+
+print results3
 
 
 
